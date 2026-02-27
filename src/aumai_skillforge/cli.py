@@ -8,8 +8,6 @@ from pathlib import Path
 
 import click
 
-import yaml  # type: ignore[import-untyped]
-
 from aumai_skillforge.core import SkillComposer, SkillRegistry
 from aumai_skillforge.models import Skill
 
@@ -52,6 +50,11 @@ def register(config: Path) -> None:
     """Register a skill from a config file."""
     raw = config.read_text(encoding="utf-8")
     if config.suffix in {".yaml", ".yml"}:
+        try:
+            import yaml  # type: ignore[import-untyped]
+        except ImportError:
+            click.echo("Error: PyYAML is required. Install with: pip install pyyaml", err=True)
+            sys.exit(1)
         data: dict[str, object] = yaml.safe_load(raw)
     else:
         data = json.loads(raw)
@@ -83,22 +86,22 @@ def compose(skills: str, output: Path, name: str) -> None:
         for issue in issues:
             click.echo(f"  - {issue}")
 
+    try:
+        import yaml  # type: ignore[import-untyped]
+    except ImportError:
+        click.echo("Error: PyYAML is required. Install with: pip install pyyaml", err=True)
+        sys.exit(1)
     output.write_text(yaml.dump(composition.model_dump(mode="json"), allow_unicode=True), encoding="utf-8")
     click.echo(f"Pipeline '{name}' saved to {output}.")
 
 
 @main.command("serve")
-@click.option("--port", default=8000, show_default=True, type=int, help="Port to listen on.")
-@click.option("--host", default="127.0.0.1", show_default=True, help="Host to bind.")
-def serve(port: int, host: str) -> None:
-    """Start the skill marketplace API server."""
-    try:
-        import uvicorn  # type: ignore[import-untyped]
-    except ImportError:
-        click.echo("uvicorn is required. Install with: pip install uvicorn", err=True)
-        sys.exit(1)
-    click.echo(f"Starting aumai-skillforge API on http://{host}:{port}")
-    uvicorn.run("aumai_skillforge.api:app", host=host, port=port, reload=False)
+@click.option("--host", default="127.0.0.1", show_default=True)
+@click.option("--port", default=8000, type=int, show_default=True)
+def serve_command(host: str, port: int) -> None:
+    """Start the SkillForge API server."""
+    click.echo("Error: API server not yet implemented.", err=True)
+    sys.exit(1)
 
 
 if __name__ == "__main__":
